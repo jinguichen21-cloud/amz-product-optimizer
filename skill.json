@@ -1,0 +1,193 @@
+{
+  "name": "amz-product-optimizer",
+  "version": "2.0.0",
+  "description": "亚马逊商品优化全流程自动化 - 从热搜词分析到商品详情图生成的一站式解决方案",
+  "author": "北野川",
+  "organization": "bug 砖家",
+  "language": "zh-CN",
+  "tags": ["amazon", "product-optimization", "e-commerce", "cross-border"],
+  "category": "电商运营",
+  
+  "triggers": [
+    "优化商品",
+    "生成商品图", 
+    "获取热搜词",
+    "cat food 优化",
+    "dog bed 上架",
+    "亚马逊选品",
+    "商品名优化",
+    "主图点击率监控"
+  ],
+  
+  "capabilities": [
+    {
+      "name": "hotword_analysis",
+      "description": "从 AMZ123 获取亚马逊热搜词数据"
+    },
+    {
+      "name": "title_optimization", 
+      "description": "基于热搜词智能优化商品名，遵循电商标准结构"
+    },
+    {
+      "name": "image_generation",
+      "description": "使用淘宝 MCP 生成 5 张场景化商品详情图"
+    },
+    {
+      "name": "click_rate_monitoring",
+      "description": "定时监控主图点击率，自动识别需优化的商品"
+    }
+  ],
+  
+  "dependencies": {
+    "python": ">=3.9",
+    "packages": [
+      "requests>=2.28.0",
+      "beautifulsoup4>=4.11.0"
+    ],
+    "mcp_servers": [
+      {
+        "id": "19ce1741e7b",
+        "name": "dingtalk",
+        "tools": ["query_records", "update_records", "get_tables"]
+      },
+      {
+        "id": "19cf03a191f", 
+        "name": "淘宝 opc 服务",
+        "tools": ["create_picture_from_tb", "query_picture_from_tb"]
+      }
+    ]
+  },
+  
+  "execution_modes": {
+    "full": {
+      "description": "完整流程：热搜词 + 优化 + 绘图",
+      "steps": ["fetch_keywords", "optimize_names", "generate_images", "write_results"]
+    },
+    "keywords_only": {
+      "description": "仅获取热搜词",
+      "steps": ["fetch_keywords"]
+    },
+    "optimize_names": {
+      "description": "仅优化商品名",
+      "steps": ["optimize_names"]
+    },
+    "generate_images": {
+      "description": "仅生成详情图",
+      "steps": ["generate_images"]
+    },
+    "monitor": {
+      "description": "仅监控点击率",
+      "steps": ["monitor_click_rate"]
+    }
+  },
+  
+  "input_schema": {
+    "type": "object",
+    "required": ["keyword", "baseId"],
+    "properties": {
+      "keyword": {
+        "type": "string",
+        "description": "要优化的关键词",
+        "example": "cat food"
+      },
+      "baseId": {
+        "type": "string", 
+        "description": "钉钉 AI 表格 Base ID",
+        "example": "lyQod3RxJKlwxrz9SOpoelQM8kb4Mw9r"
+      },
+      "tableId": {
+        "type": "string",
+        "description": "商品数据表 ID",
+        "default": "QlP62Ie"
+      },
+      "mode": {
+        "type": "string",
+        "description": "执行模式",
+        "enum": ["full", "keywords_only", "optimize_names", "generate_images", "monitor"],
+        "default": "full"
+      }
+    }
+  },
+  
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "status": {"type": "string", "enum": ["success", "error"]},
+      "mode": {"type": "string"},
+      "keywordsCount": {"type": "integer"},
+      "optimizedProductsCount": {"type": "integer"},
+      "generatedImagesCount": {"type": "integer"},
+      "duration": {"type": "number"},
+      "monitorReport": {"type": "object"}
+    }
+  },
+  
+  "field_mapping": {
+    "original_name": "yuhi6x4",
+    "optimized_name": "0z3U03f",
+    "main_image": "fXqD3tg",
+    "detail_images": ["fm413aQ", "L46geMD", "yjglrX6", "sNF7cKY", "2OxgAvb"],
+    "click_rate": "NZPaPX6",
+    "original_image": "rngdd7i"
+  },
+  
+  "quality_standards": {
+    "title_optimization": {
+      "must_follow_structure": true,
+      "structure": "[品牌名]+[核心关键词]+[产品特性]+[产品特性/材质]+[尺寸/颜色]",
+      "forbidden_patterns": ["Hot Search", "Keyword Stuffing", "标记词"],
+      "readability_required": true
+    },
+    "image_generation": {
+      "min_images": 5,
+      "scene_diversity_required": true,
+      "main_image_scene": "整体效果和使用场景",
+      "avoid": "过于细节的特写镜头"
+    },
+    "click_rate_threshold": {
+      "good": ">=5%",
+      "need_optimization": "<5%"
+    }
+  },
+  
+  "best_practices": [
+    "每周更新一次热搜词，跟踪排名变化趋势",
+    "选择 2-3 个最相关的热搜词，不要堆砌",
+    "保持商品名可读性，避免过度优化",
+    "优先选择排名上升的热搜词",
+    "确保原始图片链接可访问",
+    "每张图的 prompt 要有明显场景差异",
+    "主图选择整体场景图，细节图用于详情页",
+    "设置合理点击率阈值（建议 5%）",
+    "对低点击率商品及时更换主图",
+    "A/B 测试不同场景的主图效果"
+  ],
+  
+  "error_codes": {
+    "KEYWORD_NOT_FOUND": "关键词无热搜数据，更换热门关键词",
+    "IMAGE_GENERATION_FAILED": "图片生成失败，检查原图链接有效性",
+    "TABLE_WRITE_ERROR": "表格写入失败，验证字段类型和权限",
+    "INVALID_TITLE_FORMAT": "商品名格式错误，重新遵循标准结构生成"
+  },
+  
+  "changelog": {
+    "2.0.0": [
+      "修复商品名优化策略，移除'Hot Search'标签",
+      "遵循电商标题标准结构",
+      "避免关键词堆砌，保持语句通顺",
+      "优化详情图生成 prompt，增强场景差异",
+      "完善主图点击率监控机制"
+    ],
+    "1.0.0": [
+      "AMZ123 热搜词抓取",
+      "智能商品名扩写",
+      "淘宝 MCP 详情图生成",
+      "主图点击率监控",
+      "钉钉表格自动回写"
+    ]
+  },
+  
+  "license": "proprietary",
+  "created_at": "2026-03-16T18:00:00+08:00",
+  "updated_at": "2026-03-16T18:00:00+08:00"
+}
